@@ -33,9 +33,6 @@ const createPlayer = (name, symbol) => {
       Array.from({ length: columns }, () => createCell())
     );
   
-    // Getter function for the game board
-    const getBoard = () => board;
-  
     // Function for printing the game board to the console
     const printBoard = () => {
       const boardWithCellValues = board.map((row) =>
@@ -46,44 +43,44 @@ const createPlayer = (name, symbol) => {
   
     // Function for getting the values of the cells in the left diagonal, right diagonal, horizontal, and vertical lines relative to a given cell
     const getAssociatedBoardLines = (row, column) => {
-        // Helper function for getting the value of a cell, or "offboard" if the cell is outside the bounds of the board
-        const getValueOrOffboard = (row, column) => {
-          if (row >= 0 && row < rows && column >= 0 && column < columns) {
-            return board[row][column].getValue();
-          } else {
-            return "offboard";
-          }
-        };
-      
-        // Get the values of the cells in the left diagonal, right diagonal, horizontal, and vertical lines relative to the given cell
-        const leftDiagonal = [
-          getValueOrOffboard(row - 2, column - 2),
-          getValueOrOffboard(row - 1, column - 1),
-          getValueOrOffboard(row + 1, column + 1),
-          getValueOrOffboard(row + 2, column + 2),
-        ];
-        const rightDiagonal = [
-          getValueOrOffboard(row + 2, column - 2),
-          getValueOrOffboard(row + 1, column - 1),
-          getValueOrOffboard(row - 1, column + 1),
-          getValueOrOffboard(row - 2, column + 2),
-        ];
-        const horizontal = [
-          getValueOrOffboard(row, column - 2),
-          getValueOrOffboard(row, column - 1),
-          getValueOrOffboard(row, column + 1),
-          getValueOrOffboard(row, column + 2),
-        ];
-        const vertical = [
-          getValueOrOffboard(row - 2, column),
-          getValueOrOffboard(row - 1, column),
-          getValueOrOffboard(row + 1, column),
-          getValueOrOffboard(row + 2, column),
-        ];
-      
-        // Return an object with the values of the cells in the left diagonal, right diagonal, horizontal, and vertical lines relative to the given cell
-        return { leftDiagonal, rightDiagonal, horizontal, vertical };
+      // Helper function for getting the value of a cell, or "offboard" if the cell is outside the bounds of the board
+      const getValueOrOffboard = (row, column) => {
+        if (row >= 0 && row < rows && column >= 0 && column < columns) {
+          return board[row][column].getValue();
+        } else {
+          return "offboard";
+        }
       };
+  
+      // Get the values of the cells in the left diagonal, right diagonal, horizontal, and vertical lines relative to the given cell
+      const leftDiagonal = [
+        getValueOrOffboard(row - 2, column - 2),
+        getValueOrOffboard(row - 1, column - 1),
+        getValueOrOffboard(row + 1, column + 1),
+        getValueOrOffboard(row + 2, column + 2),
+      ];
+      const rightDiagonal = [
+        getValueOrOffboard(row + 2, column - 2),
+        getValueOrOffboard(row + 1, column - 1),
+        getValueOrOffboard(row - 1, column + 1),
+        getValueOrOffboard(row - 2, column + 2),
+      ];
+      const horizontal = [
+        getValueOrOffboard(row, column - 2),
+        getValueOrOffboard(row, column - 1),
+        getValueOrOffboard(row, column + 1),
+        getValueOrOffboard(row, column + 2),
+      ];
+      const vertical = [
+        getValueOrOffboard(row - 2, column),
+        getValueOrOffboard(row - 1, column),
+        getValueOrOffboard(row + 1, column),
+        getValueOrOffboard(row + 2, column),
+      ];
+  
+      // Return an object with the values of the cells in the left diagonal, right diagonal, horizontal, and vertical lines relative to the given cell
+      return { leftDiagonal, rightDiagonal, horizontal, vertical };
+    };
   
     // Function for checking if the game is a tie
     const isTie = () => {
@@ -92,14 +89,13 @@ const createPlayer = (name, symbol) => {
   
     // Function for resetting the game board
     const resetBoard = () => {
-        console.log("/n Starting new game... /n");
-        board.forEach((row) => row.forEach((cell) => cell.addSymbol("")));
+      console.log("\nStarting new game...\n");
+      board.forEach((row) => row.forEach((cell) => cell.addSymbol("")));
     };
   
-    // Return an object with the game board and functions for getting the board, printing the board, getting the values of the cells in the lines relative to a given cell, checking if the game is a tie, and resetting the game board
+    // Return an object with the game board and functions for printing the board, getting the values of the cells in the lines relative to a given cell, checking if the game is a tie, and resetting the game board
     return {
       board,
-      getBoard: board.getBoard,
       printBoard,
       getAssociatedBoardLines,
       isTie,
@@ -125,67 +121,68 @@ const createPlayer = (name, symbol) => {
     };
   
     // Function for checking if a given play is a winning play
-const isWinningPlay = (row, column) => {
-    const cellLines = board.getAssociatedBoardLines(row, column);
-    const activeSymbol = getActivePlayer().getSymbol();
-    // Check if any of the lines relative to the given cell contain two symbols of the active player and no empty cells or "offboard" cells
-    for (let [lineName, lineArray] of Object.entries(cellLines)) {
-        console.log({ lineName, lineArray});
-      if (
-        lineArray.filter((value) => value === activeSymbol).length === 2 &&
-        lineArray.filter((value) => value === "").length === 0
-      ) {
-        return true;
+    const isWinningPlay = (row, column) => {
+      const cellLines = board.getAssociatedBoardLines(row, column);
+      const activeSymbol = getActivePlayer().getSymbol();
+      // Create current cell as object counting from row and column 1
+      const cellIndexFromOne = { row: row + 1, column: column + 1 };
+      // Logs out the cell that is currently being played for easier debugging
+      console.log(`\nAssociated lines of selected cell ${JSON.stringify(cellIndexFromOne)}:`);
+      for (let [lineName, lineArray] of Object.entries(cellLines)) {
+        // Creates a filtered array that disregards the parts that aren't in the grid
+        const filteredLineArray = lineArray.filter((value) => value !== "offboard");
+        // Logs into the console each associated line (diagonals, horizontal and vertical), and chacks if matches the winning criterion. If so return true and stop checking other lines
+        console.log({ lineName, numberOfCells: filteredLineArray.length, filteredLineArray });
+        if (
+          filteredLineArray.length === 2 &&
+          filteredLineArray.filter((value) => value === activeSymbol).length === 2
+        ) {
+          return true;
+        }
       }
-    }
-    return false;
-  };
-
+      // If no winning combination was found, boolean is set to false
+      return false;
+    };
+  
+    // Function for printing the game board and the active player's turn
     const printNewRound = () => {
-        board.printBoard();
-        console.log(`${getActivePlayer().name}'s turn.`);
-      };
+      board.printBoard();
+      console.log(`\n${getActivePlayer().name}'s turn.`);
+    };
   
     // Function for playing a round of the game
     const playRound = (row, column) => {
       const cell = board.board[row - 1][column - 1];
-      
-      // Check if the selected cell is empty
       if (cell.isEmpty()) {
-        // Add the active player's symbol to the selected cell
         cell.addSymbol(getActivePlayer().getSymbol());
-        // Check if the play is a winning play
         if (isWinningPlay(row - 1, column - 1)) {
-          console.log(`${getActivePlayer().getName()} won the game !!!`);
+          console.log(`\n${getActivePlayer().getName()} won the game !!!`);
           board.printBoard();
           board.resetBoard();
         } else if (board.isTie()) {
-          console.log("The game is a tie.");
+          console.log("\nThe game is a tie.");
           board.printBoard();
           board.resetBoard();
         } else {
-          // Switch the active player
           switchPlayer();
         }
       } else {
-        console.log("Invalid play. The selected cell should be empty.");
+        console.log("\nInvalid play. The selected cell should be empty. Try again...");
       }
-      // Print the game board to the console
       printNewRound();
     };
   
-    // Print the initial game board to the console
     printNewRound();
 
-    // playRound(1,1);
-    // playRound(1,2);
-    // playRound(2,2);
-    // playRound(2,3);
-    // playRound(3,3);
+    playRound(1,1);
+    playRound(1,2);
+    playRound(2,2);
+    playRound(2,3);
+    playRound(3,3);
   
     // Return an object with the function for playing a round of the game
     return { playRound };
   })();
   
-  // Create a reference to the gameFlowController object
   const game = gameFlowController;
+  
