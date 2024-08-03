@@ -1,10 +1,7 @@
 // Factory function for creating player objects
 const createPlayer = (name, symbol) => {
-    // Getter function for the player's symbol
     const getSymbol = () => symbol;
-    // Getter function for the player's name
     const getName = () => name;
-    // Return an object with the player's name, symbol, and getter functions
     return { name, symbol, getSymbol, getName };
   };
   
@@ -13,13 +10,8 @@ const createPlayer = (name, symbol) => {
     // Factory function for creating cell objects
     const createCell = () => {
       let value = "";
-      // Function for adding a symbol to the cell
-      const addSymbol = (symbol) => {
-        value = symbol;
-      };
-      // Getter function for the cell's value
+      const addSymbol = (symbol) => value = symbol;
       const getValue = () => value;
-      // Function for checking if the cell is empty
       const isEmpty = () => value === "";
       // Return an object with the cell's value and functions for adding a symbol and checking if it's empty
       return { addSymbol, getValue, isEmpty };
@@ -144,45 +136,83 @@ const createPlayer = (name, symbol) => {
       return false;
     };
   
-    // Function for printing the game board and the active player's turn
-    const printNewRound = () => {
-      board.printBoard();
-      console.log(`\n${getActivePlayer().name}'s turn.`);
-    };
-  
+    // Function for playing a round of the game
     // Function for playing a round of the game
     const playRound = (row, column) => {
-      const cell = board.board[row - 1][column - 1];
-      if (cell.isEmpty()) {
+        const cell = board.board[row - 1][column - 1];
+        if (cell.isEmpty()) {
         cell.addSymbol(getActivePlayer().getSymbol());
+        updateScreen(); // update the screen before checking for a win or tie
         if (isWinningPlay(row - 1, column - 1)) {
-          console.log(`\n${getActivePlayer().getName()} won the game !!!`);
-          board.printBoard();
-          board.resetBoard();
+            // display the winning message in an alert box, update the screen after resetting the board, wait for 1 second before displaying the alert box
+            setTimeout(() => {
+                alert(`${getActivePlayer().getName()} won the game !!!`); 
+                board.resetBoard();
+                updateScreen(); 
+            }, 350);
         } else if (board.isTie()) {
-          console.log("\nThe game is a tie.");
-          board.printBoard();
-          board.resetBoard();
+            // display the tie message in an alert box, update the screen after resetting the board, wait for 1 second before displaying the alert box
+            setTimeout(() => {
+                alert(`The game is a tie.`); 
+                board.resetBoard();
+                updateScreen(); 
+            }, 350); 
         } else {
-          switchPlayer();
+            switchPlayer();
         }
-      } else {
-        console.log("\nInvalid play. The selected cell should be empty. Try again...");
-      }
-      printNewRound();
+        } else {
+        updateScreen("Invalid play. The selected cell should be empty. Try again..."); // update the screen with the invalid play message
+        }
     };
   
-    printNewRound();
-
-    playRound(1,1);
-    playRound(1,2);
-    playRound(2,2);
-    playRound(2,3);
-    playRound(3,3);
-  
     // Return an object with the function for playing a round of the game
-    return { playRound };
-  })();
+    return {
+        playRound,
+        getActivePlayer,
+        getBoard: () => board.board,
+    };
+})();
+
+// Function for updating the screen
+const updateScreen = (message) => {
+    const boardDiv = document.querySelector(".board");
+    const playerTurnDiv = document.querySelector(".turn");
+    boardDiv.textContent = "";
+    const board = gameFlowController.getBoard();
+    const activePlayer = gameFlowController.getActivePlayer();
+    playerTurnDiv.textContent = `${activePlayer.name}'s turn.`;
+    board.forEach((row, rowIndex) => {
+      row.forEach((cell, columnIndex) => {
+        const cellButton = document.createElement("button");
+        cellButton.classList.add("cell");
+        cellButton.dataset.row = rowIndex;
+        cellButton.dataset.column = columnIndex;
+        cellButton.textContent = cell.getValue();
+        boardDiv.appendChild(cellButton);
+      });
+    });
+    if (message) {
+      alert(message); // display the message using an alert box
+    }
+  };
   
-  const game = gameFlowController;
+
+function ScreenController() {
+    const game = gameFlowController;
+    const boardDiv = document.querySelector(".board");
   
+  
+    function clickHandlerBoard(e) {
+      const selectedRow = parseInt(e.target.dataset.row);
+      const selectedColumn = parseInt(e.target.dataset.column);
+      if (!isNaN(selectedRow) && !isNaN(selectedColumn)) {
+        game.playRound(selectedRow + 1, selectedColumn + 1);
+        updateScreen();
+      }
+    }
+    boardDiv.addEventListener("click", clickHandlerBoard);
+  
+    updateScreen();
+  }
+  
+  ScreenController();
